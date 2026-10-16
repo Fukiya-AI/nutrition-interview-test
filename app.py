@@ -1,7 +1,7 @@
 """栄養士(AI献立ルール設計)採用 WEBテスト — Zoom面接中に候補者が入力する。
 候補者: 通常URL / 面接官: ?admin=1 + パスワード(secrets の ADMIN_PW か 環境変数 INTERVIEW_ADMIN_PW)
 """
-import json, os, time
+import html, json, os, time
 from datetime import datetime
 from pathlib import Path
 import streamlit as st
