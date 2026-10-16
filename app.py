@@ -114,7 +114,7 @@ def candidate_view():
     ss.setdefault("secs", {})
     ss.setdefault("t0", None)
 
-    st.title("栄養士 WEBテスト")
+    st.markdown("## 栄養士 WEBテスト")
     st.caption("株式会社富喜屋|面接官と画面を共有しながら、ご自身で入力してください。")
 
     if ss.step == -1:
