@@ -118,9 +118,7 @@ def candidate_view():
     st.caption("株式会社富喜屋|面接官と画面を共有しながら、ご自身で入力してください。")
 
     if ss.step == -1:
-        st.write("全5パートです(30分前後)。上手な文章でなくて大丈夫です。**考え方と理由**が知りたいので、思ったことをそのまま書いてください。
-
-なお、このWEBテストでは、**AIを使用しないでください**。")
+        st.write("全5パートです(30分前後)。上手な文章でなくて大丈夫です。**考え方と理由**が知りたいので、思ったことをそのまま書いてください。\n\nなお、このWEBテストでは、**AIを使用しないでください**。")
         name = st.text_input("お名前")
         if st.button("開始する", type="primary", disabled=not name.strip()):
             ss.name = name.strip()
