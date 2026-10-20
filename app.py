@@ -1,10 +1,13 @@
 """栄養士(AI献立ルール設計)採用 WEBテスト — Zoom面接中に候補者が入力する。
 候補者: 通常URL / 面接官: ?admin=1 + パスワード(secrets の ADMIN_PW か 環境変数 INTERVIEW_ADMIN_PW)
 """
-import html, json, os, time
+import html, io, json, os, time
 from datetime import datetime
 from pathlib import Path
 import streamlit as st
+from docx import Document
+from docx.oxml.ns import qn
+from docx.shared import Pt, RGBColor
 
 st.set_page_config(page_title="栄養士 WEBテスト | 富喜屋", page_icon="🍙", layout="centered")
 DATA = Path(__file__).parent / "responses"
@@ -76,6 +79,31 @@ SECTIONS = [
 ]
 
 
+def build_docx(d):
+    """回答をWord(.docx)にまとめる。設問は青の太字、回答は黒。"""
+    doc = Document()
+    doc.styles["Normal"].font.name = "游ゴシック"
+    doc.styles["Normal"].element.rPr.rFonts.set(qn("w:eastAsia"), "游ゴシック")
+    doc.add_heading(f"栄養士 WEBテスト 回答:{d['name']}", level=1)
+    doc.add_paragraph(f"提出日時:{d['submitted_at']}")
+    for s_ in SECTIONS:
+        sec = d["sections"].get(s_["key"], {})
+        doc.add_heading(f"{s_['title']}(所要 {sec.get('seconds', '?')}秒)", level=2)
+        for key, label, _ in s_["qs"]:
+            a = d["answers"].get(key, "")
+            q = doc.add_paragraph().add_run(label)
+            q.bold = True
+            q.font.color.rgb = RGBColor(0x1F, 0x4E, 0xC8)
+            r = doc.add_paragraph().add_run(a if a else "(未回答)")
+            r.font.color.rgb = RGBColor(0, 0, 0)
+            m = doc.add_paragraph().add_run(f"(文字数 {len(a)})")
+            m.font.size = Pt(9)
+            m.font.color.rgb = RGBColor(0x66, 0x66, 0x66)
+    buf = io.BytesIO()
+    doc.save(buf)
+    return buf.getvalue()
+
+
 def admin_view():
     try:
         pw = st.secrets["ADMIN_PW"]
@@ -98,13 +126,19 @@ def admin_view():
                 st.markdown(f"**{s['title']}**  — 所要 {sec.get('seconds', '?')}秒")
                 for k, label, _ in [(q[0], q[1], q[2]) for q in s["qs"]]:
                     a = d["answers"].get(k, "")
-                    st.caption(label)
-                    st.text(f"{a}\n(文字数 {len(a)})")
-            md = "\n".join(
-                [f"# {d['name']} {d['submitted_at']}"]
-                + [f"\n## {q[1]}\n{d['answers'].get(q[0], '')}" for s in SECTIONS for q in s["qs"]]
+                    st.markdown(f":blue[**{label}**]")
+                    st.markdown(
+                        f'<div style="color:#000;white-space:pre-wrap;margin-bottom:1rem">{html.escape(a)}'
+                        f'<br><span style="color:#666;font-size:0.85em">(文字数 {len(a)})</span></div>',
+                        unsafe_allow_html=True,
+                    )
+            st.download_button(
+                "Wordでダウンロード",
+                build_docx(d),
+                file_name=f"{f.stem}.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                key=f.stem,
             )
-            st.download_button("テキストでダウンロード", md, file_name=f"{f.stem}.md", key=f.stem)
 
 
 def candidate_view():
