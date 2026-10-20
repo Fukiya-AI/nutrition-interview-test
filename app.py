@@ -89,6 +89,23 @@ def build_docx(d):
     for s_ in SECTIONS:
         sec = d["sections"].get(s_["key"], {})
         doc.add_heading(f"{s_['title']}(所要 {sec.get('seconds', '?')}秒)", level=2)
+        doc.add_paragraph(s_["intro"])
+        if "rules" in s_:
+            doc.add_paragraph("【施設ルール】")
+            for i, rule in enumerate(s_["rules"], 1):
+                doc.add_paragraph(f"{i}. {rule}")
+        if "menu" in s_:
+            doc.add_paragraph(f"【献立】{s_['menu']}")
+        if "table" in s_:
+            cols = list(s_["table"])
+            t = doc.add_table(rows=1, cols=len(cols), style="Table Grid")
+            for c, name in enumerate(cols):
+                t.rows[0].cells[c].text = name
+            for i in range(len(s_["table"][cols[0]])):
+                cells = t.add_row().cells
+                for c, name in enumerate(cols):
+                    cells[c].text = str(s_["table"][name][i])
+            doc.add_paragraph()
         for key, label, _ in s_["qs"]:
             a = d["answers"].get(key, "")
             q = doc.add_paragraph().add_run(label)
@@ -124,6 +141,13 @@ def admin_view():
             for s in SECTIONS:
                 sec = d["sections"].get(s["key"], {})
                 st.markdown(f"**{s['title']}**  — 所要 {sec.get('seconds', '?')}秒")
+                st.caption(s["intro"])
+                if "rules" in s:
+                    st.caption("施設ルール: " + " / ".join(f"{i}. {r}" for i, r in enumerate(s["rules"], 1)))
+                if "menu" in s:
+                    st.caption(f"献立: {s['menu']}")
+                if "table" in s:
+                    st.table(s["table"])
                 for k, label, _ in [(q[0], q[1], q[2]) for q in s["qs"]]:
                     a = d["answers"].get(k, "")
                     st.markdown(f":blue[**{label}**]")
