@@ -2,7 +2,7 @@
 候補者: 通常URL / 面接官: ?admin=1 + パスワード(secrets の ADMIN_PW か 環境変数 INTERVIEW_ADMIN_PW)
 """
 import html, io, json, os, time
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import streamlit as st
 from docx import Document
@@ -208,7 +208,7 @@ def candidate_view():
         ss.t0 = time.time()
         ss.step += 1
         if last:
-            now = datetime.now()
+            now = datetime.now(timezone(timedelta(hours=9)))  # 日本時間
             rec = {
                 "name": ss.name,
                 "submitted_at": now.strftime("%Y-%m-%d %H:%M"),
